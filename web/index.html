@@ -6,8 +6,49 @@
 	asdf
 </body>
 <script src="js/levelgraph.min.js"></script>
+<script src="js/pouchdb-5.1.0.min.js"></script>
 <script>
-	var db = levelgraph(level("vienna_roads_test"));
+	var graphdb = levelgraph(level("vienna_roads_graph"));
+	var docdb = new PouchDB('http://gi88.geoinfo.tuwien.ac.at:5984/vienna_graph');
+    var localdocdb = new PouchDB('vienna_road_docs');
+	var batchpos = 0;
 	
+    // the following code-block syncs the local pouchDB with the remote couchDB
+    
+    docdb.replicate.to(localdocdb).on('complete', function()    { console.log("sync complete") })
+                                  .on('error',    function(err) { console.log(err)  });
+    
+    // lets make a query to see how the secondary indices perform
+    localdocdb.query('graph/source', {key: '4524'})
+                                    .then( function (res) {
+                                        console.log("results!");
+                                        console.log(res);
+                                  }).catch(function (err) {
+                                        console.log(err);
+                                  });
+    
+	// the following code-block loads all data from the couchdb to be stored in the local levelgraph database
+	/*
+	docdb.allDocs({ include_docs: true}
+		).then(function (results){
+			results = results.rows;
+			console.log("start looping");
+			var allTriples = [];
+			for(var resultindex in results){
+				var result = results[resultindex].doc;
+				var triple = {subject: result.source, predicate: result.length, object: result.target};
+				allTriples.push(triple);
+				//console.log("pushed: ", triple);
+			};
+			console.log("start storing graph");
+			graphdb.put(allTriples, function(err){
+				if (err){
+					console.log(err);
+				} else {
+					console.log("finished graph storage");
+				};
+			});
+		});
+	*/
 </script>
 </html>
