@@ -5,27 +5,49 @@
 <body>
 	asdf
 </body>
-<script src="js/levelgraph.min.js"></script>
-<script src="js/pouchdb-5.1.0.min.js"></script>
+<!-- <script src="js/levelgraph.min.js"></script> -->
+<script src="js/pouchdb-5.2.0.min.js"></script>
 <script>
-	var graphdb = levelgraph(level("vienna_roads_graph"));
+	// var graphdb = levelgraph(level("vienna_roads_graph"));
 	var docdb = new PouchDB('http://gi88.geoinfo.tuwien.ac.at:5984/vienna_graph');
     var localdocdb = new PouchDB('vienna_road_docs');
 	var batchpos = 0;
-	
-    // the following code-block syncs the local pouchDB with the remote couchDB
+
+    // the following code-block syncs the local pouchDB with the remote couchDB and activates live-sync
     
-    docdb.replicate.to(localdocdb).on('complete', function()    { console.log("sync complete") })
-                                  .on('error',    function(err) { console.log(err)  });
+    PouchDB.replicate(docdb, localdocdb, {live: true,
+                                          retry: true }).on('complete', function()    { console.log("sync complete") })
+                                                        .on('error',    function(err) { console.log(err)  })
+                                                        .on('active',   function()    { console.log("sync watchdog barking") })
+                                                        .on('change',   function()    { console.log("change in db detected, syncing ...") });
     
     // lets make a query to see how the secondary indices perform
-    localdocdb.query('graph/source', {key: '4524'})
+    /*
+    console.log("Starting Test-Query ...");
+    localdocdb.query('graph/source', {key: 333, reduce: false})
                                     .then( function (res) {
-                                        console.log("results!");
+                                        console.log("Test-Query complete. Results are:");
                                         console.log(res);
                                   }).catch(function (err) {
+                                      console.log("There was an error with the Test-Query:");
                                         console.log(err);
                                   });
+    */
+    
+    processEdgesFromNode(4);
+    
+    function processEdgesFromNode(nodeID){
+        console.log("query for outgoing edges of node #"+nodeID+" ...");
+        localdocdb.query('graph/source', {key: nodeID, reduce: false})
+                                            .then( function (res) {
+                                                console.log("result of query for node #"+nodeID+":");
+                                                console.log(res);
+                                            }).catch(function(err) {
+                                                console.log("ERROR of query for node #"+nodeID+":");
+                                                console.log(err);
+                                            });
+    };
+    
     
 	// the following code-block loads all data from the couchdb to be stored in the local levelgraph database
 	/*
