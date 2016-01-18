@@ -7,19 +7,23 @@
 </body>
 <!-- <script src="js/levelgraph.min.js"></script> -->
 <script src="js/pouchdb-5.2.0.min.js"></script>
+<script src="js/geopouch-downloaded.js"></script>
 <script>
 	// var graphdb = levelgraph(level("vienna_roads_graph"));
-	var docdb = new PouchDB('http://gi88.geoinfo.tuwien.ac.at:5984/vienna_graph');
+    //PouchDB.plugin('Spatial',geopouch);
+	var docdb = new PouchDB('http://gi88.geoinfo.tuwien.ac.at:5984/vienna_graph2');
     var localdocdb = new PouchDB('vienna_road_docs');
 	var batchpos = 0;
 
     // the following code-block syncs the local pouchDB with the remote couchDB and activates live-sync
+    
     
     PouchDB.replicate(docdb, localdocdb, {live: true,
                                           retry: true }).on('complete', function()    { console.log("sync complete") })
                                                         .on('error',    function(err) { console.log(err)  })
                                                         .on('active',   function()    { console.log("sync watchdog barking") })
                                                         .on('change',   function()    { console.log("change in db detected, syncing ...") });
+    
     
     // lets make a query to see how the secondary indices perform
     /*
@@ -38,7 +42,7 @@
     
     function processEdgesFromNode(nodeID){
         console.log("query for outgoing edges of node #"+nodeID+" ...");
-        localdocdb.query('graph/source', {key: nodeID, reduce: false})
+        localdocdb.query('graph/edgesofnode', {key: nodeID, reduce: false, include_docs: true})
                                             .then( function (res) {
                                                 console.log("result of query for node #"+nodeID+":");
                                                 console.log(res);
