@@ -10,7 +10,7 @@
 <script src="js/geopouch-downloaded.js"></script>
 <script>
 	// var graphdb = levelgraph(level("vienna_roads_graph"));
-    //PouchDB.plugin('Spatial',geopouch);
+    PouchDB.plugin(geopouch);
 	var docdb = new PouchDB('http://gi88.geoinfo.tuwien.ac.at:5984/vienna_graph2');
     var localdocdb = new PouchDB('vienna_road_docs');
 	var batchpos = 0;
@@ -38,9 +38,9 @@
                                   });
     */
     
-    processEdgesFromNode(4);
+    //getEdgesFromNode(4);
     
-    function processEdgesFromNode(nodeID){
+    function getEdgesFromNode(nodeID){
         console.log("query for outgoing edges of node #"+nodeID+" ...");
         localdocdb.query('graph/edgesofnode', {key: nodeID, reduce: false, include_docs: true})
                                             .then( function (res) {
@@ -52,6 +52,7 @@
                                             });
     };
     
+    //docdb.spatial('graph/roads', [0, 0, 180, 90], {limit: 5}, function(resul){console.log(resul);} );
     
 	// the following code-block loads all data from the couchdb to be stored in the local levelgraph database
 	/*
