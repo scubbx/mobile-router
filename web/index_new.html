@@ -1,6 +1,6 @@
 <html>
 <head>
-	<title>LevelGraph Tests</title>
+	<title>Dijkstra PouchDB Tests</title>
 </head>
 <body>
 	asdf
@@ -23,7 +23,8 @@
        and whether this node was visited or not (e.g. [A,90,0] ).
     */
     var dmap = {};
-    var currnode;
+    var accumulatedCosts = 0;
+    var path = [];
     var endNode;
     
     // the following code-block syncs the local pouchDB with the remote couchDB and activates live-sync
@@ -54,10 +55,9 @@
         /* DIJKSTRA SAYS
            Weise allen Knoten die beiden Eigenschaften „Distanz“ und „Vorgänger“ zu. Initialisiere die Distanz im Startknoten mit 0 und in allen anderen Knoten mit ∞. Setze den Vorgänger des Startknotens auf sich selber
         */
-        endNode = userEndNode;              // the recursive algorithm needs the global endNode variable
-        dmap[startNode] = [0,startNode,1];  // start node setup: { startNode: [cost,previousNode,visited] }
-        currnode = [startNode,0]            // [nodeId,cost]
-        console.log(dmap);
+        dmap[startNode] = {'cost': 0, 'origin': startNode, 'visited': true};
+        accumulatedCosts = 0;
+        // path.push(startNode);
         dijkstraRecursion(startNode);
     }
     
@@ -69,49 +69,33 @@
                 /* DIJKSTRA SAYS
                    Solange es noch unbesuchte Knoten gibt, wähle darunter denjenigen mit minimaler Distanz aus
                 */
-                var nodesList = results.rows;
-                console.log("Dijkstra: query of node " + currentNode);
+                //console.log("Dijkstra: all targets from node " + currentNode);
+                //console.log(results.rows);
+                
+                // for easier readability we reformat the given structure
+                var nodesList = _.map(results.rows, function(node){return {'nodeid': node.value[0], 'cost': node.value[1], 'origin': node.key}; });
                 console.log(nodesList);
                 
-                /*
-                // store the results in the dmap
-                _.each(nodesList, function(edge){ dmap[[currentNode,edge.value[0]]] = [currentNode,edge.value[1],0]});
-                console.log("dmap:");
-                console.log(dmap);
-                */
-                
                 // keep only the not yet visited nodes
-                console.log("isNodeUnvisited:");
+                console.log("Dijkstra: isNodeUnvisited");
                 unvisitedNodesList = _.filter(nodesList,isNodeUnvisited);
-                console.log("unvisitedNodesList:");
+                console.log("Dijkstra: unvisitedNodesList:");
                 console.log(unvisitedNodesList);
                 
-                // add current distance to the returned distances per target node
-                distancedNodesList = _.map(unvisitedNodesList, function(node){ node.value[1] += currnode[1]; return node; });
-                console.log("distancedNodesList");
-                console.log(distancedNodesList);
-                
-                
-                
-                // get the cheapest edge from the unvisited edges
-                var cheapestNode = _.min(unvisitedNodesList, function(entry){return entry.value[1];} );
-                console.log("cheapest node:");
+                // get the cheapest targetNode
+                var cheapestNode = _.min(unvisitedNodesList, function(entry){return entry.cost;} );
+                console.log("Dijkstra: cheapest node:");
                 console.log(cheapestNode);
                 
-                /* DIJKSTRA SAYS
-                   setze den unbesuchten Knoten mit der geringsten Distanz als aktuell und besucht
-                */
-                if (cheapestNode.value[0]) {
-                    // if there is already an entry for this node
-                    dmap[cheapestNode.value[0]][2] = 1;     // visited
-                } else {
-                    // no entry yet, create one
-                    dmap[cheapestNode.value[0]] = [,currentNode,1];     // visited
-                }
+                cheapestNode.visited = true;
+                dmap[cheapestNode.nodeid] = cheapestNode;
+                path.push(cheapestNode);
+                console.log(dmap)
                 
+                //dijkstraRecursion(cheapestNode.nodeid);
             })
             .catch(function (err){
-                console.log("ERROR of query for node #"+currentNode);
+                console.log("Dijkstra: ERROR of query for node #"+currentNode);
                 console.log(err);
             });
     }
@@ -121,11 +105,10 @@
        A node is not yet visited if it is not contained in the dmap or it is contained, but not
        marked as visited. */
     function isNodeUnvisited(node){
-        console.log(node);
-        var dmapId = node.value[0];
-        if      ( ! dmap[dmapId] )         {return true;}      // value not existing in dmap
-        else if (   dmap[dmapId][2] == 0 ) {return true;}      // it exists, but was not yet visited
-        else if (   dmap[dmapId][2] == 1 ) {return false;};    // value visited and existing
+        // console.log(node);
+        if      ( ! dmap[node.nodeid] )         {return true;}      // value not existing in dmap
+        else if (   dmap[node.nodeid][2] == 0 ) {return true;}      // it exists, but was not yet visited
+        else if (   dmap[node.nodeid][2] == 1 ) {return false;};    // value visited and existing
     }
 
 </script>
