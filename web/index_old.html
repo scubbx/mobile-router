@@ -3,6 +3,7 @@
 	<title>LevelGraph Tests</title>
 </head>
 <body>
+    <div id="infotext"></div>
 	asdf
 </body>
 <!-- <script src="js/levelgraph.min.js"></script> -->
@@ -32,7 +33,8 @@
                                           retry: true }).on('complete', function()    { console.log("sync complete") })
                                                         .on('error',    function(err) { console.log(err)  })
                                                         .on('active',   function()    { console.log("sync watchdog barking") })
-                                                        .on('change',   function()    { console.log("change in db detected, syncing ...") });
+                                                        .on('change',   function(msg) { console.log("change in db detected, syncing ...");
+                                                                                        document.getElementById("infotext").innerHTML = msg.docs_written});
     
     
     // lets make a query to see how the secondary indices perform

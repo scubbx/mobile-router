@@ -3,6 +3,7 @@
 	<title>Dijkstra PouchDB Tests</title>
 </head>
 <body>
+    <div id="infotext"></div>
 	asdf
 </body>
 <!-- <script src="js/levelgraph.min.js"></script> -->
@@ -34,7 +35,8 @@
                                           retry: true }).on('complete', function()    { console.log("sync complete") })
                                                         .on('error',    function(err) { console.log(err)  })
                                                         .on('active',   function()    { console.log("sync watchdog barking") })
-                                                        .on('change',   function()    { console.log("change in db detected, syncing ...") });
+                                                        .on('change',   function(msg) { console.log("change in db detected, syncing ...");
+                                                                                        document.getElementById("infotext").innerHTML = msg.docs_written; });
     
     //getEdgesFromNode(4);
     
@@ -119,6 +121,8 @@
         if   (! dmap[node.nodeid] ) {return true;}   // value not existing in dmap, so it is not marked
         else {return ! dmap[node.nodeid].marked }    // it exists, so return its 'marked' value
     }
+
+// localdb.spatial('graph/roads', [0,0,180,90]).then(function(msg){ console.log(msg); });
 
 </script>
 </html>
